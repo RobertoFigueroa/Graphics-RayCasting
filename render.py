@@ -16,7 +16,7 @@ V4 = namedtuple('Point4', ['x', 'y', 'z','w'])
 
 
 def sum(v0, v1):
-    return V3(v0.x + v1.x, v0.y + v1.y, v0.z + v1.z)
+	return V3(v0.x + v1.x, v0.y + v1.y, v0.z + v1.z)
 
 def sub(v0, v1):
     return V3(v0.x - v1.x, v0.y - v1.y, v0.z - v1.z)
@@ -136,6 +136,16 @@ def inverse(a):
         ret.append(tmp[i][len(tmp[i])//2:])
     return ret
 
+def mult2Vect(v0,v1):
+	mat1 = [[v0.x],[v0.y],[v0.z]]
+	mat2 = [[v1.x],[v1.y],[v1.z]]
+	vector = [[0],[0],[0]]
+	for i in range(len(mat1)):
+		for j in range(0,1):
+			for k in range(len(mat2)):
+				vector[i][j] += mat1[i][j] * mat2[k][j]
+	return vector
+
 class Raytracer(object):
 
 	#constructor
@@ -148,6 +158,9 @@ class Raytracer(object):
 		self.fov = 60
 
 		self.scene = []
+
+		self.pointLight = None
+		self.ambientLight = None
 
 
 	def glCreateWindow(self, width, height):
@@ -312,14 +325,79 @@ class Raytracer(object):
 				direction = norm(direction)
 
 				material = None
+				intersect = None
 
+				#Revisamos cada rayo contra cada objeto
 				for obj in self.scene:
-					intersect = obj.ray_intersect(self.camPosition, direction)
-					if intersect is not None:
-						if intersect.distance < self.zbuffer[y][x]:
-							self.zbuffer[y][x] = intersect.distance
+					hit = obj.ray_intersect(self.camPosition, direction)
+					if hit is not None:
+						if hit.distance < self.zbuffer[y][x]:
+							self.zbuffer[y][x] = hit.distance
 							material = obj.material
+							intersect = hit
 
-				if material is not None:
-					self.glVertex_coord(x, y, material.diffuse)
+				#Si hubo intersepcion, dibujamos el pixel
+				if intersect is not None:
+					self.glVertex_coord(x, y, self.pointColor(material, intersect))
 
+
+
+	def pointColor(self, material, intersect):
+
+		objectColor = V3(material.diffuse[2] / 255,
+						material.diffuse[1] / 255,
+						material.diffuse[0] / 255)
+
+		ambientColor = V3(0,0,0)
+		diffuseColor = V3(0,0,0)
+		specColor = V3(0,0,0)
+
+		shadow_intensity = 0
+
+		if self.ambientLight:
+			ambientColor = V3(self.ambientLight.strength * self.ambientLight.color[2] / 255,
+										self.ambientLight.strength * self.ambientLight.color[1] / 255,
+										self.ambientLight.strength * self.ambientLight.color[0] / 255)
+
+		if self.pointLight:
+			# Sacamos la direccion de la luz para este punto
+			light_dir = sub(self.pointLight.position, intersect.point)
+			light_dir = norm(light_dir)
+
+			# Calculamos el valor del diffuse color
+			intensity = self.pointLight.intensity * max(0, dot(light_dir, intersect.normal))
+			diffuseColor = V3(intensity * self.pointLight.color[2] / 255,
+								intensity * self.pointLight.color[1] / 255,
+								intensity * self.pointLight.color[2] / 255)
+
+			# Iluminacion especular
+			view_dir = sub(self.camPosition, intersect.point)
+			view_dir = norm(view_dir)
+
+			# R = 2 * (N dot L) * N - L
+			reflect = 2 * dot(intersect.normal, light_dir)
+			reflect = mul(intersect.normal, reflect)
+			reflect = sub(reflect, light_dir)
+
+			# spec_intensity: lightIntensity * ( view_dir dot reflect) ** specularidad
+			spec_intensity = self.pointLight.intensity * (max(0, dot(view_dir, reflect)) ** material.spec)
+
+			specColor = V3(spec_intensity * self.pointLight.color[2] / 255,
+							spec_intensity * self.pointLight.color[1] / 255,
+							spec_intensity * self.pointLight.color[0] / 255)
+
+			for obj in self.scene:
+				if obj is not intersect.sceneObject:
+					hit = obj.ray_intersect(intersect.point,  light_dir)
+					if hit is not None and intersect.distance < length(sub(self.pointLight.position, intersect.point)):
+						shadow_intensity = 1
+
+		# Formula de iluminacion
+		finalColor = mult2Vect(sum(ambientColor, mul(sum(diffuseColor, specColor), (1 - shadow_intensity))), objectColor)
+		print("Esto viene -------->", finalColor)
+		#Nos aseguramos que no suba el valor de color de 1
+		r = min(1,finalColor[0][0])
+		g = min(1,finalColor[1][0])
+		b = min(1,finalColor[2][0])
+
+		return color(r, g, b)
