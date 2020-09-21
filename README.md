@@ -1,12 +1,8 @@
-# Graphics-RayCasting
-Basic raycasting using python.
+# Graphics-RayCasting Phong-Refelction
+Basic raycasting using python and aplying some reflections.
 
 Just run 
 
 ```shell
 python3 RayTracer.py
 ```
-
-and you'll get a snowman:
-
-![alt text](https://github.com/RobertoFigueroa/Graphics-RayCasting/blob/master/output.bmp?-raw=true)
