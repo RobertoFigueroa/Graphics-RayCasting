@@ -137,14 +137,8 @@ def inverse(a):
     return ret
 
 def mult2Vect(v0,v1):
-	mat1 = [[v0.x],[v0.y],[v0.z]]
-	mat2 = [[v1.x],[v1.y],[v1.z]]
-	vector = [[0],[0],[0]]
-	for i in range(len(mat1)):
-		for j in range(0,1):
-			for k in range(len(mat2)):
-				vector[i][j] += mat1[i][j] * mat2[k][j]
-	return vector
+	return V3(v0.x * v1.x, v0.y * v1.y, v0.z * v1.z)
+
 
 class Raytracer(object):
 
@@ -396,8 +390,8 @@ class Raytracer(object):
 		finalColor = mult2Vect(sum(ambientColor, mul(sum(diffuseColor, specColor), (1 - shadow_intensity))), objectColor)
 		print("Esto viene -------->", finalColor)
 		#Nos aseguramos que no suba el valor de color de 1
-		r = min(1,finalColor[0][0])
-		g = min(1,finalColor[1][0])
-		b = min(1,finalColor[2][0])
+		r = min(1,finalColor.x)
+		g = min(1,finalColor.y)
+		b = min(1,finalColor.z)
 
 		return color(r, g, b)

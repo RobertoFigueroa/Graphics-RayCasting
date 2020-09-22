@@ -3,15 +3,16 @@ from utils import color
 from obj import Obj, Texture
 from sphere import Sphere, Material, PointLight, AmbientLight
 
-brick = Material(diffuse = color(0.8, 0.25, 0.25 ))
-stone = Material(diffuse = color(0.4, 0.4, 0.4 ))
-grass = Material(diffuse = color(0.5, 1, 0))
+brick = Material(diffuse = color(0.8, 0.25, 0.25 ), spec = 16)
+stone = Material(diffuse = color(0.4, 0.4, 0.4 ), spec = 32)
+grass = Material(diffuse = color(0.5, 1, 0), spec = 32)
+glass = Material(diffuse = color(0.25, 1, 1), spec = 64)
 snow = Material(diffuse= color(1,1,1))
 dot = Material(diffuse= color(0,0,0))
 carrot = Material(diffuse= color(1,0.6,0))
 
-width = 256
-height = 256
+width = 1080
+height = 720
 r = Raytracer(width, height)
 
 r.pointLight = PointLight(position = V3(-2,2,0), intensity = 1)
