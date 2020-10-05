@@ -9,4 +9,5 @@ python3 RayTracer.py
 
 The spheres will look like:
 
-![alt-text](https://github.com/RobertoFigueroa/Graphics-RayCasting/blob/Graphics-Raycasting/Phong-Reflection/output.bmp?raw=true)
+![alt-text](https://raw.githubusercontent.com/RobertoFigueroa/Graphics-RayCasting/Graphics-Raycasting/Cubes-and-planes/output.bmp?raw=true)
+

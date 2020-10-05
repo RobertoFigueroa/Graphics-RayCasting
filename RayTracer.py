@@ -3,8 +3,8 @@ from utils import color
 from obj import Obj, Texture, Envmap
 from sphere import *
 
-width = 256
-height = 256
+width = 1280
+height = 720
 r = Raytracer(width, height)
 r.glClearColor(0.2, 0.6, 0.8)
 r.glClear()
