@@ -2,6 +2,27 @@
 
 import struct
 from utils import color
+from math import acos, atan2
+from collections import namedtuple
+
+
+PI = 3.141592653589793
+
+V3 = namedtuple('Point3', ['x', 'y', 'z'])
+
+def length(v0):
+    return (v0.x**2 + v0.y**2 + v0.z**2)**0.5
+
+
+def norm(v0):
+    v0length = length(v0)
+
+    if not v0length:
+        return V3(0, 0, 0)
+
+    return V3(v0.x/v0length, v0.y/v0length, v0.z/v0length)
+
+
 
 class Obj(object):
     def __init__(self, filename):
@@ -71,5 +92,44 @@ class Texture(object):
             return self.pixels[y][x]
         else:
             return color(0,0,0)
+
+
+
+class Envmap(object):
+    def __init__(self, path):
+        self.path = path
+        self.read()
+        
+    def read(self):
+        image = open(self.path, 'rb')
+        image.seek(10)
+        headerSize = struct.unpack('=l', image.read(4))[0]
+
+        image.seek(14 + 4)
+        self.width = struct.unpack('=l', image.read(4))[0]
+        self.height = struct.unpack('=l', image.read(4))[0]
+        image.seek(headerSize)
+
+        self.pixels = []
+
+        for y in range(self.height):
+            self.pixels.append([])
+            for x in range(self.width):
+                b = ord(image.read(1)) / 255
+                g = ord(image.read(1)) / 255
+                r = ord(image.read(1)) / 255
+                self.pixels[y].append(color(r,g,b))
+
+        image.close()
+
+    def getColor(self, direction):
+
+        direction = norm(direction)
+
+        x = int( (atan2( direction[2], direction[0]) / (2 * PI) + 0.5) * self.width)
+        y = int( acos(-direction[1]) / PI * self.height )
+
+        return self.pixels[y][x]
+
 
 
