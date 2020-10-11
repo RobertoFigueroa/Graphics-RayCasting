@@ -9,6 +9,11 @@ r = Raytracer(width, height)
 r.glClearColor(0.2, 0.6, 0.8)
 r.glClear()
 
+r.envmap = Envmap('envmap.bmp')
+
+r.dirLight = DirectionalLight(direction = V3(1, -1, -2), intensity = 0.5)
+r.ambientLight = AmbientLight(strength = 0.1)
+
 brick = Material(diffuse = color(0.8, 0.25, 0.25 ), spec = 16)
 stone = Material(diffuse = color(0.4, 0.4, 0.4 ), spec = 32)
 grass = Material(diffuse = color(0.5, 1, 0), spec = 32)
@@ -20,23 +25,20 @@ mirror = Material(spec = 64, matType = REFLECTIVE)
 rock = Material(diffuse=color(0.5,0.5,0.5), spec = 30, ior = 1.5, matType= OPAQUE)
 sky = Material(diffuse= color(0.6,0.8,0.9))
 
+boxMat = Material(texture = Texture('box.bmp'))
+
+earthMat = Material(texture = Texture('earthDay.bmp'))
+
+
+
 r.pointLight = PointLight(position = V3(0,0,0), intensity = 1)
 r.ambientLight = AmbientLight(strength = 0.1)
 
-# r.scene.append( Sphere(V3(    0,   0, -5),    1, brick) )
-# r.scene.append( Sphere(V3( -0.5, 0.5, -3), 0.25, stone) )
-#r.scene.append( Sphere(V3(-1,-1, -5), 0.5, grass) )
-#r.scene.append( Sphere(V3( 1,-1, -5), 0.5, glass) )
 
-r.scene.append( Plane( V3(-5,-3,0), V3(1,0,0), brick))
-r.scene.append( Plane( V3(5,-3,0), V3(-1,0,0), brick))
-r.scene.append( Plane( V3(-2,-3,0), V3(0,1,0), rock))
-r.scene.append( Plane( V3(-2,-3,-20), V3(0,0,1), sky))
-r.scene.append( Plane( V3(-2,3,0), V3(0,-1,0), grass))
+r.scene.append( AABB(V3(0, -3, -10), V3(5, 0.1, 5) , boxMat ) )
 
-r.scene.append( AABB(V3(1, 1.5, -5), 1.5, stone ) )
-r.scene.append( AABB(V3(-1, -1.2, -5), 1.5, glass ) )
-r.scene.append( AABB(V3(1, -1.2, -5), 1.5, mirror ) )
+r.scene.append( Sphere(V3( 0, 0, -8), 2, earthMat))
+
 
 
 r.rtRender()

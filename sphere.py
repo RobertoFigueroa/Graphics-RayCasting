@@ -1,14 +1,26 @@
 from render import V3, color, sub, dot, length, mul, sum, norm
 
+from math import atan2, acos
+
 OPAQUE = 0
 REFLECTIVE = 1
 TRANSPARENT = 2
 
 WHITE = color(1,1,1)
 
+PI = 3.141592653589793
+
+
 class AmbientLight(object):
     def __init__(self, strength = 0, _color = WHITE):
         self.strength = strength
+        self.color = _color
+
+
+class DirectionalLight(object):
+    def __init__(self, direction = V3(0,-1,0), _color = WHITE, intensity = 1):
+        self.direction = norm(direction)
+        self.intensity = intensity
         self.color = _color
 
 class PointLight(object):
@@ -22,7 +34,7 @@ class Material(object):
     # iluminacion con una superficie
     # En raytracing, el color de un pixel es determinado por el material de la superficie
     # que un rayo intercepta
-    def __init__(self, diffuse = WHITE, spec=0, ior=1, matType = OPAQUE):
+    def __init__(self, diffuse = WHITE, spec=0, ior=1, texture = None,  matType = OPAQUE):
         # Diffuse es el color basico de un objeto. Cuando recibe luz, se esparce por igual en todas las direcciones.
         self.diffuse = diffuse
         self.spec = spec
@@ -30,13 +42,18 @@ class Material(object):
         self.matType = matType
         self.ior = ior
 
+        self.texture = texture
+
 
 class Intersect(object):
-    def __init__(self, distance, point, normal, sceneObject):
+    def __init__(self, distance, point, normal, texCoords, sceneObject):
         self.distance = distance
         self.point = point
         self.normal = normal
         self.sceneObject = sceneObject
+
+        self.texCoords = texCoords
+
 
 class Sphere(object):
     def __init__(self, center, radius, material):
@@ -79,9 +96,15 @@ class Sphere(object):
         nor = sub( hit, self.center)
         n = norm(nor)
 
+        u = 1 - (atan2(n[2], n[0])) / ((2 * PI ) + 0.5)
+        v = acos(-n[1]) / PI
+
+        uvs = [u, v]
+
         return Intersect(distance = t0,
                          point = hit,
                          normal = n,
+                         texCoords=uvs,
                          sceneObject = self)
 
 
@@ -105,6 +128,7 @@ class Plane(object):
                 return Intersect(distance = t,
                                  point = hit,
                                  normal = self.normal,
+                                 texCoords=None,
                                  sceneObject = self)
 
         return None
@@ -119,16 +143,18 @@ class AABB(object):
         self.material = material
         self.planes = []
 
-        halfSize = size / 2
+        halfSizeX = size[0] / 2
+        halfSizeY = size[1] / 2
+        halfSizeZ = size[2] / 2
 
-        self.planes.append( Plane( sum (position, V3(halfSize,0,0)), V3(1,0,0), material))
-        self.planes.append( Plane( sum (position, V3(-halfSize,0,0)), V3(-1,0,0), material))
+        self.planes.append( Plane( sum (position, V3(halfSizeX,0,0)), V3(1,0,0), material))
+        self.planes.append( Plane( sum (position, V3(-halfSizeX,0,0)), V3(-1,0,0), material))
 
-        self.planes.append( Plane( sum (position, V3(0,halfSize,0)), V3(0,1,0), material))
-        self.planes.append( Plane( sum (position, V3(0,-halfSize,0)), V3(0,-1,0), material))
+        self.planes.append( Plane( sum (position, V3(0,halfSizeY,0)), V3(0,1,0), material))
+        self.planes.append( Plane( sum (position, V3(0,-halfSizeY,0)), V3(0,-1,0), material))
 
-        self.planes.append( Plane( sum (position, V3(0,0,halfSize)), V3(0,0,1), material))
-        self.planes.append( Plane( sum (position, V3(0,0,-halfSize)), V3(0,0,-1), material))
+        self.planes.append( Plane( sum (position, V3(0,0,halfSizeZ)), V3(0,0,1), material))
+        self.planes.append( Plane( sum (position, V3(0,0,-halfSizeZ)), V3(0,0,-1), material))
 
 
     def ray_intersect(self, orig, dir):
@@ -139,11 +165,13 @@ class AABB(object):
         boundsMax = [0,0,0]
 
         for i in range(3):
-            boundsMin[i] = self.position[i] - (epsilon + self.size / 2)
-            boundsMax[i] = self.position[i] + (epsilon + self.size / 2)
+            boundsMin[i] = self.position[i] - (epsilon + self.size[i] / 2)
+            boundsMax[i] = self.position[i] + (epsilon + self.size[i] / 2)
 
         t = float('inf')
         intersect = None
+
+        uvs = None
 
         for plane in self.planes:
             planeInter = plane.ray_intersect(orig, dir)
@@ -158,10 +186,29 @@ class AABB(object):
                                 t = planeInter.distance
                                 intersect = planeInter
 
+                                if abs(plane.normal[0]) > 0:
+                                    # mapear uvs para eje x. Uso coordenadas en Y y Z.
+                                    u = (planeInter.point [1] - boundsMin[1]) / (boundsMax[1] - boundsMin[1])
+                                    v = (planeInter.point [2] - boundsMin[2]) / (boundsMax[2] - boundsMin[2])
+
+                                elif abs(plane.normal[1]) > 0:
+                                    # mapear uvs para eje y. Uso coordenadas en X y Z.
+                                    u = (planeInter.point [0] - boundsMin[0]) / (boundsMax[0] - boundsMin[0])
+                                    v = (planeInter.point [2] - boundsMin[2]) / (boundsMax[2] - boundsMin[2])
+
+                                elif abs(plane.normal[2]) > 0:
+                                    # mapear uvs para eje Z. Uso coordenadas en X y Y.
+                                    u = (planeInter.point [0] - boundsMin[0]) / (boundsMax[0] - boundsMin[0])
+                                    v = (planeInter.point [1] - boundsMin[1]) / (boundsMax[1] - boundsMin[1])
+
+                                uvs = [u, v]
+
+
         if intersect is None:
             return None
 
         return Intersect(distance = intersect.distance,
                          point = intersect.point,
                          normal = intersect.normal,
+                         texCoords=uvs,
                          sceneObject = self)
