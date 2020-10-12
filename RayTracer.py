@@ -3,8 +3,8 @@ from utils import color
 from obj import Obj, Texture, Envmap
 from sphere import *
 
-width = 1280
-height = 720
+width = 256
+height = 256
 r = Raytracer(width, height)
 r.glClearColor(0.2, 0.6, 0.8)
 r.glClear()
@@ -29,15 +29,27 @@ boxMat = Material(texture = Texture('box.bmp'))
 
 earthMat = Material(texture = Texture('earthDay.bmp'))
 
-
-
 r.pointLight = PointLight(position = V3(0,0,0), intensity = 1)
 r.ambientLight = AmbientLight(strength = 0.1)
 
 
-r.scene.append( AABB(V3(0, -3, -10), V3(5, 0.1, 5) , boxMat ) )
+noisemap = Texture('noiseMap.bmp')
 
-r.scene.append( Sphere(V3( 0, 0, -8), 2, earthMat))
+for i in range(1,20):
+    for j in range(1,20):
+        if noisemap.pixels[i][j][0]/ 255 >=0.66:
+            r.scene.append(AABB(V3((i-10),0.5, -j*0.5), V3(1,1,1), boxMat))
+        if noisemap.pixels[i][j][0] / 255 < 0.66 and noisemap.pixels[i][j][0] / 255 >=0.33:
+            r.scene.append(AABB(V3((i-10),0, -j*0.5), V3(1,1,1), boxMat))
+        else:
+            r.scene.append(AABB(V3((i-10),-0.5, -j*0.5), V3(1,1,1), boxMat))
+            
+
+
+
+# r.scene.append( AABB(V3(0, 0.22, -10), V3(0.5, 0.5, 0.5) , brick ) )
+
+# r.scene.append( Sphere(V3( 0, 0, -8), 2, earthMat))
 
 
 
