@@ -11,4 +11,9 @@ After a several amount of time we get this:
 
 ![alt-text](https://raw.githubusercontent.com/RobertoFigueroa/Graphics-RayCasting/Graphics-Raycasting/Project/output.bmp?raw=true)
 
+Reference:
+
+![alt-text](https://raw.githubusercontent.com/RobertoFigueroa/Graphics-RayCasting/Graphics-Raycasting/Project/rtx_off.png?raw=true)
+
+
 For the community this project is open for improve performance.
