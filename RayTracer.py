@@ -3,8 +3,15 @@ from utils import color
 from obj import Obj, Texture, Envmap
 from sphere import *
 
-width = 256
-height = 256
+from datetime import datetime
+
+now = datetime.now()
+current_time = now.strftime("%H:%M:%S")
+print("Current Time =", current_time)
+
+
+width = 800
+height = 800
 r = Raytracer(width, height)
 r.glClearColor(0.2, 0.6, 0.8)
 r.glClear()
@@ -22,38 +29,45 @@ snow = Material(diffuse= color(1,1,1))
 dot = Material(diffuse= color(0,0,0))
 carrot = Material(diffuse= color(1,0.6,0))
 mirror = Material(spec = 64, matType = REFLECTIVE)
-rock = Material(diffuse=color(0.5,0.5,0.5), spec = 30, ior = 1.5, matType= OPAQUE)
+water = Material(diffuse=color(0.6,1,1), spec = 100, ior = 3, matType= TRANSPARENT)
+enderPearl = Material(diffuse=color(0,0.3,0.3), spec = 40, ior = 1.5, matType= OPAQUE)
+
 sky = Material(diffuse= color(0.6,0.8,0.9))
 
-boxMat = Material(texture = Texture('box.bmp'))
 
-earthMat = Material(texture = Texture('earthDay.bmp'))
+sandMat = Material(texture = Texture('sand.bmp'))
 
-r.pointLight = PointLight(position = V3(0,0,0), intensity = 1)
+
+# r.pointLights.append(PointLight(position = V3(2,-1,0), intensity = 1))
+#r.pointLights.append(PointLight(position = V3(2,1,0), intensity = 1))
 r.ambientLight = AmbientLight(strength = 0.1)
 
 
 noisemap = Texture('noiseMap.bmp')
 
-for i in range(1,20):
-    for j in range(1,20):
+for i in range(-15,15):
+    for j in range(1,50):
         if noisemap.pixels[i][j][0]/ 255 >=0.66:
-            r.scene.append(AABB(V3((i-10),0.5, -j*0.5), V3(1,1,1), boxMat))
+            r.scene.append(AABB(V3((i*0.5),-2, (-2-j*0.5)), V3(0.5,0.5,0.5), water))
         if noisemap.pixels[i][j][0] / 255 < 0.66 and noisemap.pixels[i][j][0] / 255 >=0.33:
-            r.scene.append(AABB(V3((i-10),0, -j*0.5), V3(1,1,1), boxMat))
+            r.scene.append(AABB(V3((i*0.5),-1.5, (-2-j*0.5)), V3(0.5,0.5,0.5), sandMat))
         else:
-            r.scene.append(AABB(V3((i-10),-0.5, -j*0.5), V3(1,1,1), boxMat))
+            r.scene.append(AABB(V3((i*0.5),-2.5, (-2-j*0.5)), V3(0.5,0.5,0.5), snow))
             
 
+r.scene.append(AABB(V3(-0.6, 0,-2), V3(0.5,0.5,0.5), mirror))
+r.scene.append( Sphere(V3(4, 0, -10),  1, enderPearl) )
+r.scene.append( Sphere(V3(2, 0, -5),  0.5, glass) )
 
-
-# r.scene.append( AABB(V3(0, 0.22, -10), V3(0.5, 0.5, 0.5) , brick ) )
-
-# r.scene.append( Sphere(V3( 0, 0, -8), 2, earthMat))
-
+# r.scene.append(AABB(V3(-0.6, 0,-2), V3(0.5,0.5,0.5), water))
 
 
 r.rtRender()
 
 
 r.glFinish('output.bmp')
+
+now = datetime.now()
+
+current_time = now.strftime("%H:%M:%S")
+print("Current Time =", current_time)

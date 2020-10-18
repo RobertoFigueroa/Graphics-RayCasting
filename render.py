@@ -204,9 +204,9 @@ class Raytracer(object):
 	#constructor
 	def __init__(self, width, height):
 		self.framebuffer = []
+		self.clear_color = BLACK
 		self.curr_color = WHITE
 		self.glCreateWindow(width, height)
-		self.clear_color = BLACK
 		
 		self.camPosition = V3(0,0,0)
 		self.fov = 60
@@ -242,7 +242,7 @@ class Raytracer(object):
 								[0,0,0,1]]
 
 	def glClear(self):
-		self.framebuffer = [[BLACK for x in range(
+		self.framebuffer = [[self.clear_color for x in range(
 		    self.width)] for y in range(self.height)]
 		
 		#Zbuffer (buffer de profundidad)
@@ -490,7 +490,7 @@ class Raytracer(object):
 							spec_intensity * pointLight.color[0] / 255)
 
 			shadMat, shadInter = self.scene_intercept(intersect.point,  light_dir, intersect.sceneObject)
-			if shadInter is not None and shadInter.distance < length(sub(self.pointLight.position, intersect.point)):
+			if shadInter is not None and shadInter.distance < length(sub(pointLight.position, intersect.point)):
 				shadow_intensity = 1
 
 			pLightColor = sum(mul(sum(diffuseColor, specColor), (1 - shadow_intensity)), pLightColor)
